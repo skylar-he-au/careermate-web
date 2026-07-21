@@ -80,6 +80,7 @@ function Login() {
                     value={email}
                     onChange={emailChange}
                     error={emailError}
+                    autoFocus = {true}
                 />
 
                 <TextInput

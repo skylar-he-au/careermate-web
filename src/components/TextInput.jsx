@@ -1,4 +1,4 @@
-import { useId } from "react"
+import { useEffect, useId, useRef } from "react"
 
 export default function TextInput({
     label,
@@ -7,12 +7,22 @@ export default function TextInput({
     onChange,
     error,
     placeholder = "",
+    autoFocus = false,
 }) {
+    const inputRef = useRef(null);
     const id = useId();
+
+    useEffect(()=>{
+        if(autoFocus){
+            inputRef.current?.focus();
+        }
+    },[autoFocus])
+
     return (
         <div className="input-group">
             <label htmlFor={id}>{label}:</label>
             <input
+                ref={inputRef}
                 id={id}
                 type={type}
                 value={value}

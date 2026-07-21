@@ -134,6 +134,7 @@ export default function Register() {
                     value={name}
                     onChange={nameChange}
                     error={nameError}
+                    autoFocus = {true}
                 />
 
                 <TextInput
