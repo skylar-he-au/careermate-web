@@ -1,151 +1,57 @@
-import { useState } from "react";
-import {
-  Outlet,
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
-
+import { useEffect, useRef, useState } from "react";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import "./mainLayout.css";
 
+const menuItems = [
+  { name: "Dashboard", icon: "⌂", path: "/home" },
+  { name: "Jobs", icon: "⌕", path: "/jobs" },
+  { name: "Applications", icon: "▤", path: "/applications" },
+  { name: "Profile", icon: "○", path: "/profile" },
+];
+
 export default function MainLayout() {
   const { user, logout } = useAuth();
-
   const navigate = useNavigate();
-  const location = useLocation();
+  const menuRef = useRef(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const [open, setOpen] = useState(false);
-
-  const menuItems = [
-    {
-      name: "Dashboard",
-      icon: "🏠",
-      path: "/home",
-    },
-    {
-      name: "Profile",
-      icon: "👤",
-      path: "/profile",
-    },
-    {
-      name: "Jobs",
-      icon: "💼",
-      path: "/jobs",
-    },
-    {
-      name: "Applications",
-      icon: "📄",
-      path: "/applications",
-    },
-  ];
+  useEffect(() => {
+    function handleOutsideClick(event) {
+      if (!menuRef.current?.contains(event.target)) setUserMenuOpen(false);
+    }
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
 
   function handleLogout() {
     logout();
-    navigate("/login");
+    navigate("/login", { replace: true });
   }
+
+  const initial = (user?.name || user?.email || "U").charAt(0).toUpperCase();
 
   return (
     <div className="app-layout">
-      <nav className="navbar">
-        <div
-          className="logo"
-          onClick={() => navigate("/home")}
-        >
-          <span className="logo-icon">💼</span>
-          <span>CareerMate</span>
+      <header className="navbar">
+        <button className="mobile-menu-button" onClick={() => setMobileMenuOpen((open) => !open)} aria-label="Toggle navigation" aria-expanded={mobileMenuOpen}>☰</button>
+        <button className="logo" onClick={() => navigate("/home")}><span>CM</span><strong>CareerMate</strong></button>
+        <div className="user-menu" ref={menuRef}>
+          <button className="user-trigger" onClick={() => setUserMenuOpen((open) => !open)} aria-expanded={userMenuOpen}><span className="avatar">{initial}</span><span className="user-trigger-text"><strong>{user?.name || "User"}</strong><small>{user?.email}</small></span><span>⌄</span></button>
+          {userMenuOpen && <div className="dropdown"><NavLink to="/profile" onClick={() => setUserMenuOpen(false)}>View profile</NavLink><button onClick={handleLogout}>Sign out</button></div>}
         </div>
-
-        <div className="user-menu">
-          <button
-            className="avatar"
-            onClick={() =>
-              setOpen((previous) => !previous)
-            }
-          >
-            {(user?.email ?? "U")
-              .charAt(0)
-              .toUpperCase()}
-          </button>
-
-          {open && (
-            <div className="dropdown">
-              <div className="dropdown-header">
-                <strong>
-                  Hello,{" "}
-                  {user?.name ??
-                    user?.email ??
-                    "User"}
-                  !
-                </strong>
-
-                {user?.email && (
-                  <span>{user.email}</span>
-                )}
-              </div>
-
-              <button
-                className="dropdown-item logout-item"
-                onClick={handleLogout}
-              >
-                Logout
-              </button>
-            </div>
-          )}
-        </div>
-      </nav>
+      </header>
 
       <div className="layout-body">
-        <aside className="sidebar">
-          <div className="sidebar-user">
-            <div className="sidebar-avatar">
-              {(user?.name ??
-                user?.email ??
-                "U")
-                .charAt(0)
-                .toUpperCase()}
-            </div>
-
-            <div className="sidebar-user-details">
-              <strong>
-                {user?.name ?? "User"}
-              </strong>
-              <span>{user?.email}</span>
-            </div>
-          </div>
-
-          <div className="sidebar-menu">
-            {menuItems.map((item) => {
-              const isActive =
-                location.pathname === item.path;
-
-              return (
-                <button
-                  key={item.path}
-                  className={
-                    isActive
-                      ? "sidebar-item active"
-                      : "sidebar-item"
-                  }
-                  onClick={() =>
-                    navigate(item.path)
-                  }
-                >
-                  <span className="sidebar-icon">
-                    {item.icon}
-                  </span>
-
-                  <span className="sidebar-label">
-                    {item.name}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+        <aside className={`sidebar${mobileMenuOpen ? " open" : ""}`}>
+          <nav className="sidebar-menu" aria-label="Main navigation">
+            {menuItems.map((item) => <NavLink key={item.path} to={item.path} onClick={() => setMobileMenuOpen(false)} className={({ isActive }) => `sidebar-item${isActive ? " active" : ""}`}><span className="sidebar-icon">{item.icon}</span><span>{item.name}</span></NavLink>)}
+          </nav>
+          <div className="sidebar-tip"><span>✦</span><strong>Career tip</strong><p>Tailor your application to each role instead of sending the same one everywhere.</p></div>
         </aside>
-
-        <main className="layout-content">
-          <Outlet />
-        </main>
+        {mobileMenuOpen && <button className="sidebar-backdrop" onClick={() => setMobileMenuOpen(false)} aria-label="Close navigation" />}
+        <main className="layout-content"><Outlet /></main>
       </div>
     </div>
   );
