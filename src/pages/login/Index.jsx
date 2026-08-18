@@ -1,23 +1,29 @@
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import TextInput from "../../components/TextInput";
-import { useAuth } from "../../contexts/AuthContext";
 import useField from "../../hooks/useField";
+import { clearAuthError, loginUser } from "../../store/authSlice";
 import { validateEmail, validateLogin, validatePassword } from "../../utils/validators";
 import "./Index.scss";
 
 function Login() {
-  const { login, isAuthenticated } = useAuth();
+  const dispatch = useDispatch();
+  const { user, token, status, error: apiError } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const location = useLocation();
-  const emailField = useField(validateEmail, "test@test.com");
-  const passwordField = useField(validatePassword, "123456");
-  const [error, setError] = useState("");
-  const [status, setStatus] = useState("idle");
+  const emailField = useField(validateEmail);
+  const passwordField = useField(validatePassword);
+  const [validationError, setValidationError] = useState("");
+  const isAuthenticated = Boolean(user && token);
 
   useEffect(() => {
-    if (isAuthenticated) navigate("/home", { replace: true });
-  }, [isAuthenticated, navigate]);
+    if (isAuthenticated && status === "idle") navigate("/home", { replace: true });
+  }, [isAuthenticated, navigate, status]);
+
+  useEffect(() => {
+    dispatch(clearAuthError());
+  }, [dispatch]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -26,21 +32,18 @@ function Login() {
     if (validationError) {
       emailField.validate();
       passwordField.validate();
-      setStatus("error");
-      setError(validationError);
+      setValidationError(validationError);
       return;
     }
 
     try {
-      setStatus("loading");
-      setError("");
-      await Promise.resolve(login(emailField.value, passwordField.value));
+      setValidationError("");
+      await dispatch(
+        loginUser({ email: emailField.value, password: passwordField.value })
+      ).unwrap();
       const destination = location.state?.from?.pathname || "/home";
       navigate(destination, { replace: true });
-    } catch (loginError) {
-      setStatus("error");
-      setError(loginError.message);
-    }
+    } catch {}
   }
 
   return (
@@ -54,14 +57,12 @@ function Login() {
       <section className="auth-form-panel">
         <form onSubmit={handleSubmit} className="form-container" noValidate>
           <span className="mobile-logo">CareerMate</span>
-          <div className="form-heading"><span className="eyebrow">WELCOME BACK</span><h2>Sign in to your account</h2><p>Use the demo details below or your registered account.</p></div>
-
-          <div className="demo-credentials"><strong>Demo account</strong><span>test@test.com</span><span>Password: 123456</span></div>
+          <div className="form-heading"><span className="eyebrow">WELCOME BACK</span><h2>Sign in to your account</h2><p>Use the account registered with the CareerMate API.</p></div>
 
           <TextInput label="Email address" name="email" type="email" autoComplete="email" autoFocus {...emailField} />
           <TextInput label="Password" name="password" type="password" autoComplete="current-password" {...passwordField} />
 
-          {status === "error" && <p className="form-error" role="alert">{error}</p>}
+          {(validationError || apiError) && <p className="form-error" role="alert">{validationError || apiError}</p>}
           <button className="primary-button submit-button" disabled={status === "loading"}>{status === "loading" ? "Signing in…" : "Sign in"}</button>
           <p className="auth-link">New to CareerMate? <Link to="/register">Create an account</Link></p>
         </form>

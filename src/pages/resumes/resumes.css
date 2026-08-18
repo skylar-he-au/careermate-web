@@ -1,0 +1,27 @@
+.resumes-header { align-items: center; }
+.page-size-control { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 0.86rem; font-weight: 700; }
+.page-size-control select { min-width: 72px; height: 42px; padding: 0 30px 0 12px; color: var(--ink); background: white; border: 1px solid var(--line); border-radius: 9px; }
+.resumes-error { margin-bottom: 18px; }
+.resume-loading { padding: 55px 24px; color: var(--muted); text-align: center; }
+.resume-panel { overflow: hidden; }
+.resume-list { padding: 4px 25px; }
+.resume-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 17px; padding: 20px 0; border-bottom: 1px solid var(--line); }
+.resume-row:last-child { border-bottom: 0; }
+.resume-file-icon { display: grid; place-items: center; width: 48px; height: 58px; color: #a42637; background: #fff0f2; border: 1px solid #f4cbd1; border-radius: 8px; font-size: 0.66rem; font-weight: 900; }
+.resume-details { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.resume-details strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.resume-details span { color: var(--muted); font-size: 0.82rem; }
+.resume-row .secondary-button:disabled { color: #8e99ae; background: #f0f2f6; cursor: default; }
+.pagination { padding: 16px 25px; display: flex; justify-content: space-between; align-items: center; gap: 20px; color: var(--muted); background: #fafbfc; border-top: 1px solid var(--line); font-size: 0.86rem; }
+.pagination > div { display: flex; align-items: center; gap: 12px; }
+.pagination .secondary-button { min-height: 38px; padding: 0 13px; }
+.pagination .secondary-button:disabled { color: #9aa3b3; background: #eef0f4; cursor: default; }
+
+@media (max-width: 620px) {
+  .resumes-header { align-items: flex-start; flex-direction: column; gap: 20px; }
+  .resume-list { padding: 4px 17px; }
+  .resume-row { grid-template-columns: auto minmax(0, 1fr); }
+  .resume-row .secondary-button { grid-column: 2; justify-self: start; }
+  .pagination { align-items: flex-start; flex-direction: column; padding: 16px 17px; }
+  .pagination > div { width: 100%; justify-content: space-between; }
+}

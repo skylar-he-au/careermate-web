@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
+import { useSelector } from "react-redux";
 import { useCareer } from "../../contexts/CareerContext";
 import "./home.css";
 
 function Home() {
-  const { user } = useAuth();
+  const user = useSelector((state) => state.auth.user);
   const { jobs, applications } = useCareer();
   const interviewCount = applications.filter(
     (application) => application.status === "Interview"
@@ -75,7 +75,7 @@ function Home() {
         <article className="panel next-steps">
           <span className="eyebrow">NEXT STEPS</span>
           <h2>Build momentum</h2>
-          <Link to="/profile"><span>1</span><div><strong>Manage career profiles</strong><small>Search profiles or add a new candidate</small></div>→</Link>
+          <Link to="/resumes"><span>1</span><div><strong>Review your resumes</strong><small>View and download your uploaded files</small></div>→</Link>
           <Link to="/jobs"><span>2</span><div><strong>Find a role</strong><small>Search curated opportunities</small></div>→</Link>
           <Link to="/applications"><span>3</span><div><strong>Update your tracker</strong><small>Record interviews and offers</small></div>→</Link>
         </article>

@@ -1,17 +1,20 @@
 import { useEffect, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
+import { logoutUser } from "../../store/authSlice";
+import { resetResumes } from "../../store/resumeSlice";
 import "./mainLayout.css";
 
 const menuItems = [
   { name: "Dashboard", icon: "⌂", path: "/home" },
   { name: "Jobs", icon: "⌕", path: "/jobs" },
   { name: "Applications", icon: "▤", path: "/applications" },
-  { name: "Profiles", icon: "○", path: "/profile" },
+  { name: "My resumes", icon: "▧", path: "/resumes" },
 ];
 
 export default function MainLayout() {
-  const { user, logout } = useAuth();
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.user);
   const navigate = useNavigate();
   const menuRef = useRef(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -26,7 +29,8 @@ export default function MainLayout() {
   }, []);
 
   function handleLogout() {
-    logout();
+    dispatch(resetResumes());
+    dispatch(logoutUser());
     navigate("/login", { replace: true });
   }
 
@@ -39,7 +43,7 @@ export default function MainLayout() {
         <button className="logo" onClick={() => navigate("/home")}><span>CM</span><strong>CareerMate</strong></button>
         <div className="user-menu" ref={menuRef}>
           <button className="user-trigger" onClick={() => setUserMenuOpen((open) => !open)} aria-expanded={userMenuOpen}><span className="avatar">{initial}</span><span className="user-trigger-text"><strong>{user?.name || "User"}</strong><small>{user?.email}</small></span><span>⌄</span></button>
-          {userMenuOpen && <div className="dropdown"><NavLink to="/profile" onClick={() => setUserMenuOpen(false)}>View profile</NavLink><button onClick={handleLogout}>Sign out</button></div>}
+          {userMenuOpen && <div className="dropdown"><NavLink to="/resumes" onClick={() => setUserMenuOpen(false)}>My resumes</NavLink><button onClick={handleLogout}>Sign out</button></div>}
         </div>
       </header>
 

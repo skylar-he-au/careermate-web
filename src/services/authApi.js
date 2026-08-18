@@ -1,68 +1,33 @@
-function getBaseUrl() {
-  return (process.env.REACT_APP_BaseAPI || process.env.REACT_APP_BASE_API || "").replace(/\/$/, "");
-}
+import apiClient from "./apiClient";
 
-async function request(path, options) {
-  const baseUrl = getBaseUrl();
-  if (!baseUrl) return null;
-
-  let response;
-  try {
-    response = await fetch(`${baseUrl}${path}`, {
-      ...options,
-      headers: { "Content-Type": "application/json", ...options?.headers },
-    });
-  } catch {
-    throw new Error("Unable to connect to the server");
-  }
-
-  let result = null;
-  try {
-    result = await response.json();
-  } catch {
-    // The response status still gives a useful fallback error below.
-  }
-
-  if (!response.ok || result?.success === false) {
-    throw new Error(result?.message || `Request failed (${response.status})`);
-  }
-
-  return result;
-}
-
-export function hasAuthApi() {
-  return Boolean(getBaseUrl());
-}
-
-export async function loginWithApi(email, password) {
-  const result = await request("/v1/auth/login", {
-    method: "POST",
-    body: JSON.stringify({ email, password }),
-  });
-
-  if (!result) return null;
-  const remoteUser = result.data?.user ?? result.user;
-  const token = result.data?.accessToken ?? result.accessToken;
-
-  if (!remoteUser?.email) throw new Error("The server returned an invalid login response");
-
+function normalizeUser(remoteUser) {
   return {
-    id: remoteUser.id ?? remoteUser._id ?? `api-${remoteUser.email}`,
-    name: remoteUser.fullName ?? remoteUser.name ?? remoteUser.email,
+    id: remoteUser.id ?? remoteUser._id,
+    name: remoteUser.fullName ?? remoteUser.displayName ?? remoteUser.email,
     email: remoteUser.email,
-    title: remoteUser.title ?? "Job seeker",
-    location: remoteUser.location ?? "",
-    bio: remoteUser.bio ?? "",
-    ...(token ? { token } : {}),
+    title: remoteUser.goal ?? "Job seeker",
+    avatarUrl: remoteUser.avatarUrl ?? null,
   };
 }
 
+export async function loginWithApi(email, password) {
+  const response = await apiClient.post("/v1/auth/login", { email, password });
+  const remoteUser = response.data?.data?.user;
+  const token = response.data?.data?.token;
+
+  if (!remoteUser?.email || !token) {
+    throw new Error("The server returned an invalid login response");
+  }
+
+  return { user: normalizeUser(remoteUser), token };
+}
+
 export async function registerWithApi(name, email, password) {
-  const result = await request("/v1/auth/register", {
-    method: "POST",
-    body: JSON.stringify({ fullName: name, email, password }),
+  const response = await apiClient.post("/v1/auth/register", {
+    fullName: name,
+    email,
+    password,
   });
 
-  if (!result) return null;
-  return result.data?.user ?? result.user ?? { fullName: name, email };
+  return response.data?.data?.user;
 }

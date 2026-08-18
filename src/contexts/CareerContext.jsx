@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 import { jobs } from "../data/jobs";
-import { useAuth } from "./AuthContext";
 
 const CareerContext = createContext(null);
 
@@ -20,7 +20,7 @@ function readApplications(userId) {
 }
 
 export function CareerProvider({ children }) {
-  const { user } = useAuth();
+  const user = useSelector((state) => state.auth.user);
   const [state, setState] = useState(() => ({
     userId: user?.id ?? null,
     applications: readApplications(user?.id),

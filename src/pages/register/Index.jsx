@@ -1,20 +1,26 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import TextInput from "../../components/TextInput";
-import { useAuth } from "../../contexts/AuthContext";
 import useField from "../../hooks/useField";
+import { clearAuthError, registerUser } from "../../store/authSlice";
 import { validateConfirmPassword, validateEmail, validateName, validatePassword, validateRegister } from "../../utils/validators";
 import "./Index.scss";
 
 export default function Register() {
-  const { register } = useAuth();
+  const dispatch = useDispatch();
+  const { status, error: apiError } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const nameField = useField(validateName);
   const emailField = useField(validateEmail);
   const passwordField = useField(validatePassword);
   const confirmPasswordField = useField((value) => validateConfirmPassword(value, passwordField.value));
-  const [status, setStatus] = useState("idle");
-  const [error, setError] = useState("");
+  const [validationError, setValidationError] = useState("");
+  const [registered, setRegistered] = useState(false);
+
+  useEffect(() => {
+    dispatch(clearAuthError());
+  }, [dispatch]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -22,17 +28,15 @@ export default function Register() {
 
     if (validationError) {
       nameField.validate(); emailField.validate(); passwordField.validate(); confirmPasswordField.validate();
-      setStatus("error"); setError(validationError); return;
+      setValidationError(validationError); return;
     }
 
     try {
-      setStatus("loading"); setError("");
-      await Promise.resolve(register({ name: nameField.value, email: emailField.value, password: passwordField.value }));
-      setStatus("success");
+      setValidationError("");
+      await dispatch(registerUser({ name: nameField.value, email: emailField.value, password: passwordField.value })).unwrap();
+      setRegistered(true);
       window.setTimeout(() => navigate("/login", { replace: true }), 700);
-    } catch (registerError) {
-      setStatus("error"); setError(registerError.message);
-    }
+    } catch {}
   }
 
   return (
@@ -52,9 +56,9 @@ export default function Register() {
           <TextInput label="Password" name="password" type="password" autoComplete="new-password" hint="Use 6–20 characters." {...passwordField} />
           <TextInput label="Confirm password" name="confirmPassword" type="password" autoComplete="new-password" {...confirmPasswordField} />
 
-          {status === "error" && <p className="form-error" role="alert">{error}</p>}
-          {status === "success" && <p className="success-message" role="status">Account created. Taking you to sign in…</p>}
-          <button className="primary-button submit-button" disabled={status === "loading" || status === "success"}>{status === "loading" ? "Creating account…" : "Create account"}</button>
+          {(validationError || apiError) && !registered && <p className="form-error" role="alert">{validationError || apiError}</p>}
+          {registered && <p className="success-message" role="status">Account created. Taking you to sign in…</p>}
+          <button className="primary-button submit-button" disabled={status === "loading" || registered}>{status === "loading" ? "Creating account…" : "Create account"}</button>
           <p className="auth-link">Already have an account? <Link to="/login">Sign in</Link></p>
         </form>
       </section>

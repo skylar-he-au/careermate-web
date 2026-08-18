@@ -5,8 +5,8 @@ import Applications from "./pages/applications/applications";
 import Home from "./pages/home/home";
 import Jobs from "./pages/jobs/jobs";
 import Login from "./pages/login/Index";
-import Profile from "./pages/profile/profile";
 import Register from "./pages/register/Index";
+import Resumes from "./pages/resumes/resumes";
 
 function App() {
   return (
@@ -26,7 +26,7 @@ function App() {
           <Route path="/home" element={<Home />} />
           <Route path="/jobs" element={<Jobs />} />
           <Route path="/applications" element={<Applications />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/resumes" element={<Resumes />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/home" replace />} />
