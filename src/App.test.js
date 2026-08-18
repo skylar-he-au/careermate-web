@@ -2,7 +2,6 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Provider } from "react-redux";
 import App from "./App";
 import TextInput from "./components/TextInput";
-import { CareerProvider } from "./contexts/CareerContext";
 import { loginWithApi } from "./services/authApi";
 import { getMyResumes } from "./services/resumeApi";
 import { makeStore } from "./store/store";
@@ -23,9 +22,7 @@ function renderApp(preloadedState) {
     store,
     ...render(
       <Provider store={store}>
-        <CareerProvider>
-          <App />
-        </CareerProvider>
+        <App />
       </Provider>
     ),
   };
@@ -44,6 +41,10 @@ function authenticatedState() {
       pagination: { page: 1, pageSize: 10, totalItems: 0, totalPages: 1 },
       status: "idle",
       error: null,
+    },
+    career: {
+      userId: "user-1",
+      applications: [],
     },
   };
 }
@@ -86,6 +87,17 @@ test("adds a job to the signed-in user's application tracker", async () => {
 
   expect(await screen.findByText(/was added to your tracker/i)).toBeInTheDocument();
   expect(JSON.parse(localStorage.getItem("careermate.applications.user-1"))).toHaveLength(1);
+
+  fireEvent.click(screen.getByRole("link", { name: /applications/i }));
+  const statusSelect = await screen.findByRole("combobox", { name: /status/i });
+  fireEvent.change(statusSelect, { target: { value: "Interview" } });
+  await waitFor(() => {
+    expect(JSON.parse(localStorage.getItem("careermate.applications.user-1"))[0].status).toBe("Interview");
+  });
+
+  fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+  expect(await screen.findByRole("heading", { name: /your tracker is empty/i })).toBeInTheDocument();
+  expect(JSON.parse(localStorage.getItem("careermate.applications.user-1"))).toEqual([]);
 });
 
 test("loads only the signed-in user's paginated resumes", async () => {

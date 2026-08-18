@@ -5,7 +5,7 @@ CareerMate 是一个连接真实后端 API 的求职管理前端。用户可以�
 ## 主要功能
 
 - Axios API Client：统一后端地址、超时、JWT 请求拦截和 `401` 处理
-- Redux Toolkit：集中保存认证状态、Resume 列表和分页状态
+- Redux Toolkit：集中保存认证、Resume、分页和申请追踪状态
 - 后端注册与登录，不提供本地演示账号
 - 受保护路由和登录后返回原页面
 - My resumes：按用户查询、分页、设置 page size、获取临时下载链接
@@ -43,7 +43,7 @@ npm start
 
 浏览器只在 `careermate.auth` 中保存当前用户资料和 JWT。Axios 请求拦截器会把 JWT 放进 `Authorization: Bearer ...`。Resume 的所有权由后端根据 JWT 判断，前端不会传入或自行决定 user ID。后端返回 `401` 时，前端会清除失效登录并回到登录页。
 
-申请追踪器仍是前端练习功能，按用户 ID 保存在浏览器 `localStorage`，并未写入后端数据库。
+申请追踪器由 Redux 的 `careerSlice` 管理，并通过监听中间件按用户 ID 同步到浏览器 `localStorage`；它仍是前端练习功能，并未写入后端数据库。
 
 ## 验证
 

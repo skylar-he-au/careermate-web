@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { useCareer } from "../../contexts/CareerContext";
+import { jobs } from "../../data/jobs";
 import "./home.css";
 
 function Home() {
   const user = useSelector((state) => state.auth.user);
-  const { jobs, applications } = useCareer();
+  const applications = useSelector((state) => state.career.applications);
   const interviewCount = applications.filter(
     (application) => application.status === "Interview"
   ).length;

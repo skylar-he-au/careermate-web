@@ -1,9 +1,12 @@
 import { useMemo, useState } from "react";
-import { useCareer } from "../../contexts/CareerContext";
+import { useDispatch, useSelector } from "react-redux";
+import { jobs } from "../../data/jobs";
+import { applyToJob } from "../../store/careerSlice";
 import "./jobs.css";
 
 export default function Jobs() {
-  const { jobs, applications, applyToJob } = useCareer();
+  const dispatch = useDispatch();
+  const applications = useSelector((state) => state.career.applications);
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState("All");
   const [notice, setNotice] = useState("");
@@ -17,11 +20,11 @@ export default function Jobs() {
         .includes(normalizedQuery);
       return matchesQuery && (mode === "All" || job.mode === mode);
     });
-  }, [jobs, mode, query]);
+  }, [mode, query]);
 
   function handleApply(jobId) {
     try {
-      const application = applyToJob(jobId);
+      const application = dispatch(applyToJob(jobId));
       setNotice(`${application.jobTitle} was added to your tracker.`);
     } catch (error) {
       setNotice(error.message);
