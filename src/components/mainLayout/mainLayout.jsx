@@ -7,7 +7,7 @@ const menuItems = [
   { name: "Dashboard", icon: "⌂", path: "/home" },
   { name: "Jobs", icon: "⌕", path: "/jobs" },
   { name: "Applications", icon: "▤", path: "/applications" },
-  { name: "Profile", icon: "○", path: "/profile" },
+  { name: "Profiles", icon: "○", path: "/profile" },
 ];
 
 export default function MainLayout() {

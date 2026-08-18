@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import App from "./App";
 import TextInput from "./components/TextInput";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -76,4 +76,35 @@ test("renders an accessible field and reports validation errors", () => {
 
   fireEvent.change(input, { target: { value: "person@example.com" } });
   expect(handleChange).toHaveBeenCalledTimes(1);
+});
+
+test("searches, views and adds persistent career profiles", async () => {
+  localStorage.setItem("careermate.session", JSON.stringify({ id: "profile-user", name: "Alex", email: "alex@example.com" }));
+  window.history.pushState({}, "", "/profile");
+
+  render(
+    <AuthProvider>
+      <CareerProvider>
+        <App />
+      </CareerProvider>
+    </AuthProvider>
+  );
+
+  expect(await screen.findByRole("heading", { name: "Profiles" })).toBeInTheDocument();
+
+  fireEvent.change(screen.getByRole("searchbox", { name: /find a profile/i }), { target: { value: "Sarah Lee" } });
+  await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("1 profile found"));
+  expect(screen.getByText("sarah@test.com")).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: "View" }));
+  expect(screen.getByRole("dialog", { name: "Sarah Lee" })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Done" }));
+
+  fireEvent.click(screen.getByRole("button", { name: /add profile/i }));
+  fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: "Taylor Chen" } });
+  fireEvent.change(screen.getByLabelText(/^email/i), { target: { value: "taylor@example.com" } });
+  fireEvent.click(screen.getByRole("button", { name: /save profile/i }));
+
+  expect(await screen.findByRole("dialog", { name: /profile added/i })).toBeInTheDocument();
+  expect(JSON.parse(localStorage.getItem("careermate.profiles.profile-user"))).toHaveLength(4);
 });

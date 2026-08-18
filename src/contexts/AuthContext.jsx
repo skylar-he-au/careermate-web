@@ -1,4 +1,5 @@
 import { createContext, useContext, useMemo, useState } from "react";
+import { hasAuthApi, loginWithApi, registerWithApi } from "../services/authApi";
 
 const SESSION_KEY = "careermate.session";
 const USERS_KEY = "careermate.users";
@@ -36,7 +37,7 @@ export function AuthProvider({ children }) {
     setUser(nextUser);
   }
 
-  function login(email, password) {
+  async function login(email, password) {
     const normalizedEmail = normalizeEmail(email);
 
     if (normalizedEmail === demoUser.email && password === "123456") {
@@ -50,16 +51,22 @@ export function AuthProvider({ children }) {
         candidate.email === normalizedEmail && candidate.password === password
     );
 
-    if (!account) {
-      throw new Error("Incorrect email or password");
+    if (account) {
+      const { password: _password, ...safeUser } = account;
+      persistSession(safeUser);
+      return safeUser;
     }
 
-    const { password: _password, ...safeUser } = account;
-    persistSession(safeUser);
-    return safeUser;
+    if (hasAuthApi()) {
+      const remoteUser = await loginWithApi(normalizedEmail, password);
+      persistSession(remoteUser);
+      return remoteUser;
+    }
+
+    throw new Error("Incorrect email or password");
   }
 
-  function register({ name, email, password }) {
+  async function register({ name, email, password }) {
     const normalizedEmail = normalizeEmail(email);
     const users = readJson(USERS_KEY, []);
 
@@ -68,6 +75,10 @@ export function AuthProvider({ children }) {
       users.some((candidate) => candidate.email === normalizedEmail)
     ) {
       throw new Error("An account with this email already exists");
+    }
+
+    if (hasAuthApi()) {
+      return registerWithApi(name.trim(), normalizedEmail, password);
     }
 
     const account = {

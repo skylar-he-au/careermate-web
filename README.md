@@ -8,8 +8,8 @@ CareerMate 是一个可独立运行的求职管理前端 MVP。用户可以注�
 - 响应式 Dashboard 和求职数据概览
 - 按关键词、地点、技能和办公方式筛选职位
 - 申请追踪器：Applied、Interview、Offer 等状态
-- 可编辑个人资料
-- 数据按用户保存在浏览器 `localStorage`
+- Career Profiles：延迟关键词搜索、新增档案、查看详情和重复邮箱校验
+- 申请记录和 Career Profiles 按用户保存在浏览器 `localStorage`
 - 表单校验、路由保护和核心用户流程测试
 
 ## 本地运行
@@ -25,6 +25,8 @@ npm start
 
 - Email: `test@test.com`
 - Password: `123456`
+
+如需接入参考项目使用的认证 API，将 `.env.example` 复制为 `.env.development.local`，并把 `REACT_APP_BaseAPI` 改为后端地址。配置后，演示账号和本地账号仍可使用，其他登录与注册请求会发送到 `/v1/auth/login` 和 `/v1/auth/register`。
 
 ## 验证
 

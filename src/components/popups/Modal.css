@@ -1,0 +1,14 @@
+.modal-overlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 24px; background: rgba(15, 25, 46, 0.58); }
+.modal { display: flex; flex-direction: column; width: calc(100vw - 48px); max-height: calc(100dvh - 48px); overflow: hidden; background: white; border: 1px solid rgba(255,255,255,0.45); border-radius: 17px; box-shadow: 0 28px 80px rgba(9, 19, 40, 0.28); animation: modal-open 0.18s ease-out; }
+.modal-small { max-width: 460px; }
+.modal-medium { max-width: 760px; }
+.modal-large { max-width: 1040px; }
+.modal-header { display: flex; flex: 0 0 auto; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 23px 26px; border-bottom: 1px solid var(--line); }
+.modal-header h2 { margin: 0 0 6px; font-size: 1.35rem; }
+.modal-header p { margin: 0; color: var(--muted); }
+.modal-close { display: grid; place-items: center; flex: 0 0 auto; width: 38px; height: 38px; padding: 0; color: var(--muted); background: #f0f3f7; border: 0; border-radius: 50%; font-size: 1.55rem; }
+.modal-close:hover { color: var(--ink); background: #e4e9f0; }
+.modal-body { flex: 1 1 auto; min-height: 0; padding: 26px; overflow: auto; }
+.modal-footer { display: flex; flex: 0 0 auto; align-items: center; justify-content: flex-end; gap: 11px; padding: 18px 26px; border-top: 1px solid var(--line); }
+@keyframes modal-open { from { opacity: 0; transform: translateY(-10px) scale(0.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@media (max-width: 600px) { .modal-overlay { padding: 12px; }.modal { width: calc(100vw - 24px); max-height: calc(100dvh - 24px); }.modal-header, .modal-body, .modal-footer { padding-left: 19px; padding-right: 19px; }.modal-footer { flex-direction: column-reverse; }.modal-footer button { width: 100%; } }

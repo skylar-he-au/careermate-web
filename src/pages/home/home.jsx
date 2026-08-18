@@ -75,7 +75,7 @@ function Home() {
         <article className="panel next-steps">
           <span className="eyebrow">NEXT STEPS</span>
           <h2>Build momentum</h2>
-          <Link to="/profile"><span>1</span><div><strong>Polish your profile</strong><small>Keep your goals and location current</small></div>→</Link>
+          <Link to="/profile"><span>1</span><div><strong>Manage career profiles</strong><small>Search profiles or add a new candidate</small></div>→</Link>
           <Link to="/jobs"><span>2</span><div><strong>Find a role</strong><small>Search curated opportunities</small></div>→</Link>
           <Link to="/applications"><span>3</span><div><strong>Update your tracker</strong><small>Record interviews and offers</small></div>→</Link>
         </article>
