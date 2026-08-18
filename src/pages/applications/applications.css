@@ -1,0 +1,13 @@
+.application-list { display: flex; flex-direction: column; gap: 12px; }
+.application-card { padding: 19px 20px; display: grid; grid-template-columns: auto 1fr 155px auto; align-items: center; gap: 16px; background: white; border: 1px solid #e2e7ef; border-radius: 13px; }
+.application-main h2 { margin: 0 0 5px; font-size: 1.04rem; }
+.application-main p { margin: 0 0 4px; color: var(--muted); font-size: 0.85rem; }
+.application-main small { color: #929bad; }
+.status-control { display: flex; flex-direction: column; gap: 5px; }
+.status-control span { color: var(--muted); font-size: 0.7rem; font-weight: 750; text-transform: uppercase; }
+.status-control select { height: 38px; padding: 0 9px; border: 1px solid #ced6e2; border-radius: 7px; background: white; }
+.icon-button { width: 36px; height: 36px; border: 0; border-radius: 8px; background: transparent; font-size: 1.3rem; }
+.icon-button.danger { color: #a42637; }
+.icon-button.danger:hover { background: #fff0f2; }
+
+@media (max-width: 700px) { .application-card { grid-template-columns: auto 1fr auto; }.status-control { grid-column: 2 / 4; }.status-control select { width: 100%; } }
