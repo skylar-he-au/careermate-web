@@ -10,10 +10,17 @@
 .resume-file-icon { display: grid; place-items: center; width: 48px; height: 58px; color: #a42637; background: #fff0f2; border: 1px solid #f4cbd1; border-radius: 8px; font-size: 0.66rem; font-weight: 900; }
 .resume-details { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 .resume-details strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.resume-details strong small { margin-left: 7px; padding: 3px 7px; color: #7b47c8; background: #f3ebff; border-radius: 99px; font-size: 0.64rem; text-transform: uppercase; }
 .resume-details span { color: var(--muted); font-size: 0.82rem; }
 .resume-row .secondary-button:disabled { color: #8e99ae; background: #f0f2f6; cursor: default; }
 .pagination { padding: 16px 25px; display: flex; justify-content: space-between; align-items: center; gap: 20px; color: var(--muted); background: #fafbfc; border-top: 1px solid var(--line); font-size: 0.86rem; }
 .pagination > div { display: flex; align-items: center; gap: 12px; }
+.pagination .page-numbers { display: flex; align-items: center; gap: 5px; }
+.page-number { width: 36px; height: 36px; padding: 0; color: var(--ink); background: white; border: 1px solid var(--line); border-radius: 8px; font-weight: 750; }
+.page-number:hover { color: var(--brand); border-color: #b9c5f5; }
+.page-number.active { color: white; background: var(--brand); border-color: var(--brand); }
+.page-number:disabled { cursor: default; }
+.page-ellipsis { padding: 0 3px; }
 .pagination .secondary-button { min-height: 38px; padding: 0 13px; }
 .pagination .secondary-button:disabled { color: #9aa3b3; background: #eef0f4; cursor: default; }
 
@@ -23,5 +30,7 @@
   .resume-row { grid-template-columns: auto minmax(0, 1fr); }
   .resume-row .secondary-button { grid-column: 2; justify-self: start; }
   .pagination { align-items: flex-start; flex-direction: column; padding: 16px 17px; }
-  .pagination > div { width: 100%; justify-content: space-between; }
+  .pagination > div { width: 100%; justify-content: space-between; gap: 7px; }
+  .pagination .page-numbers { width: auto; justify-content: center; }
+  .page-number { width: 34px; height: 34px; }
 }

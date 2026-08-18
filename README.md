@@ -30,6 +30,8 @@ npm start
 
 当前开发配置会在 <http://localhost:3008> 打开前端，并连接 <http://localhost:3000> 的后端。
 
+开发环境暂时启用了 `REACT_APP_USE_MOCK_RESUMES=true`，因此 My resumes 会显示 10 条标有 Sample 的数据。选择 page size `5` 时会出现第 `1`、`2` 页。看完效果后将它改成 `false`，页面就会恢复查询真实后端数据。
+
 登录和 Resume 功能使用以下后端接口：
 
 - `POST /v1/auth/register`

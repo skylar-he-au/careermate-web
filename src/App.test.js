@@ -89,16 +89,29 @@ test("adds a job to the signed-in user's application tracker", async () => {
 });
 
 test("loads only the signed-in user's paginated resumes", async () => {
-  getMyResumes.mockResolvedValue({
-    items: [{ _id: "resume-1", fileName: "Alex-CV.pdf", fileSize: 2048, createdAt: "2026-08-18T00:00:00.000Z" }],
-    pagination: { page: 1, pageSize: 10, totalItems: 1, totalPages: 1 },
-  });
+  getMyResumes.mockImplementation(async ({ page, pageSize }) => ({
+    items: Array.from({ length: pageSize }, (_, index) => ({
+      _id: `resume-${(page - 1) * pageSize + index + 1}`,
+      fileName: `Resume-${(page - 1) * pageSize + index + 1}.pdf`,
+      fileSize: 2048,
+      createdAt: "2026-08-18T00:00:00.000Z",
+    })),
+    pagination: { page, pageSize, totalItems: 10, totalPages: Math.ceil(10 / pageSize) },
+  }));
   window.history.pushState({}, "", "/resumes");
-  renderApp(authenticatedState());
+  const state = authenticatedState();
+  state.resumes.pagination.pageSize = 5;
+  renderApp(state);
 
-  expect(await screen.findByText("Alex-CV.pdf")).toBeInTheDocument();
-  expect(getMyResumes).toHaveBeenCalledWith({ page: 1, pageSize: 10 });
-  expect(screen.getByText("1 resume")).toBeInTheDocument();
+  expect(await screen.findByText("Resume-1.pdf")).toBeInTheDocument();
+  expect(getMyResumes).toHaveBeenCalledWith({ page: 1, pageSize: 5 });
+  expect(screen.getByText("10 resumes")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Page 1" })).toHaveAttribute("aria-current", "page");
+  expect(screen.getByRole("button", { name: "Page 2" })).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: "Page 2" }));
+  expect(await screen.findByText("Resume-6.pdf")).toBeInTheDocument();
+  expect(getMyResumes).toHaveBeenLastCalledWith({ page: 2, pageSize: 5 });
 
   fireEvent.change(screen.getByRole("combobox", { name: /rows per page/i }), { target: { value: "20" } });
   await waitFor(() => expect(getMyResumes).toHaveBeenLastCalledWith({ page: 1, pageSize: 20 }));

@@ -19,12 +19,30 @@ function formatDate(value) {
     : new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(date);
 }
 
+function getPageItems(currentPage, totalPages) {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1);
+  }
+
+  const pages = [...new Set([1, currentPage - 1, currentPage, currentPage + 1, totalPages])]
+    .filter((pageNumber) => pageNumber >= 1 && pageNumber <= totalPages)
+    .sort((first, second) => first - second);
+
+  return pages.flatMap((pageNumber, index) => {
+    const previous = pages[index - 1];
+    return previous && pageNumber - previous > 1
+      ? [`ellipsis-${previous}`, pageNumber]
+      : [pageNumber];
+  });
+}
+
 export default function Resumes() {
   const dispatch = useDispatch();
   const { items, pagination, status, error } = useSelector((state) => state.resumes);
   const [downloadingId, setDownloadingId] = useState(null);
   const [downloadError, setDownloadError] = useState("");
   const { page, pageSize, totalItems, totalPages } = pagination;
+  const pageItems = getPageItems(page, totalPages);
 
   useEffect(() => {
     dispatch(fetchResumes({ page, pageSize }));
@@ -100,15 +118,16 @@ export default function Resumes() {
                 <article className="resume-row" key={resumeId}>
                   <span className="resume-file-icon" aria-hidden="true">PDF</span>
                   <div className="resume-details">
-                    <strong>{resume.fileName}</strong>
+                    <strong>{resume.fileName} {resume.isSample && <small>Sample</small>}</strong>
                     <span>{formatFileSize(resume.fileSize)} · Uploaded {formatDate(resume.createdAt)}</span>
                   </div>
                   <button
                     className="secondary-button"
                     onClick={() => handleDownload(resume)}
-                    disabled={downloadingId === resumeId}
+                    disabled={resume.isSample || downloadingId === resumeId}
+                    title={resume.isSample ? "Sample data is for pagination preview only" : undefined}
                   >
-                    {downloadingId === resumeId ? "Preparing…" : "Download"}
+                    {resume.isSample ? "Sample" : downloadingId === resumeId ? "Preparing…" : "Download"}
                   </button>
                 </article>
               );
@@ -119,7 +138,24 @@ export default function Resumes() {
             <span>{totalItems} {totalItems === 1 ? "resume" : "resumes"}</span>
             <div>
               <button className="secondary-button" disabled={page <= 1 || status === "loading"} onClick={() => dispatch(setPage(page - 1))}>Previous</button>
-              <span>Page {page} of {totalPages}</span>
+              <div className="page-numbers">
+                {pageItems.map((pageItem) =>
+                  typeof pageItem === "number" ? (
+                    <button
+                      key={pageItem}
+                      className={`page-number${pageItem === page ? " active" : ""}`}
+                      aria-label={`Page ${pageItem}`}
+                      aria-current={pageItem === page ? "page" : undefined}
+                      disabled={status === "loading"}
+                      onClick={() => dispatch(setPage(pageItem))}
+                    >
+                      {pageItem}
+                    </button>
+                  ) : (
+                    <span className="page-ellipsis" key={pageItem} aria-hidden="true">…</span>
+                  )
+                )}
+              </div>
               <button className="secondary-button" disabled={page >= totalPages || status === "loading"} onClick={() => dispatch(setPage(page + 1))}>Next</button>
             </div>
           </footer>
