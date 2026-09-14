@@ -1,72 +1,119 @@
 # CareerMate
 
-CareerMate 是一个连接真实后端 API 的求职管理前端。用户可以注册、登录、浏览职位、维护申请记录，并分页查看和下载自己上传的简历。
+CareerMate is a job application tracker built with React and Redux Toolkit. Authentication and resumes are served by a real Express/MongoDB API: [careermate-api](https://github.com/skylar-he-au/careermate-api).
 
-## 主要功能
+Users can register, sign in, browse jobs, track their applications, and page through and download the resumes they have uploaded.
 
-- Axios API Client：统一后端地址、超时、JWT 请求拦截和 `401` 处理
-- Redux Toolkit：集中保存认证、Resume、分页和申请追踪状态
-- 后端注册与登录，不提供本地演示账号
-- 受保护路由和登录后返回原页面
-- My resumes：按用户查询、分页、设置 page size、获取临时下载链接
-- 职位筛选与本地申请追踪器
-- 响应式 Dashboard 和移动端导航
-- 登录、路由保护、职位追踪、Resume 分页等核心流程测试
+## Tech stack
 
-## 配置与运行
+- React 19
+- React Router 7
+- Redux Toolkit (with React Redux)
+- Axios
+- Sass
+- Jest + React Testing Library (via `react-scripts`)
 
-先复制环境变量示例：
+## Getting started
+
+Copy the example environment file:
 
 ```bash
 cp .env.example .env.development.local
 ```
 
-确保 `REACT_APP_BASE_API` 与后端使用的地址和端口一致，然后运行：
+Set `REACT_APP_BASE_API` to the address of your running careermate-api instance. The example values are:
+
+| Variable | Example | Purpose |
+| --- | --- | --- |
+| `PORT` | `3008` | Port for the React dev server |
+| `REACT_APP_BASE_API` | `http://localhost:3000` | Backend base URL (careermate-api listens on `3000` by default) |
+| `REACT_APP_USE_MOCK_RESUMES` | `false` | Set to `true` in development to page through 10 local sample resumes instead of calling the API |
+
+Install dependencies and start the dev server:
 
 ```bash
 npm install
 npm start
 ```
 
-当前开发配置会在 <http://localhost:3008> 打开前端，并连接 <http://localhost:3000> 的后端。
+The app opens at <http://localhost:3008> and talks to the backend at <http://localhost:3000>. Start careermate-api first; if `REACT_APP_BASE_API` is empty, every API request is rejected before it is sent.
 
-开发环境暂时启用了 `REACT_APP_USE_MOCK_RESUMES=true`，因此 My resumes 会显示 10 条标有 Sample 的数据。选择 page size `5` 时会出现第 `1`、`2` 页。看完效果后将它改成 `false`，页面就会恢复查询真实后端数据。
-
-登录和 Resume 功能使用以下后端接口：
-
-- `POST /v1/auth/register`
-- `POST /v1/auth/login`
-- `GET /v1/resumes?page=1&limit=10`
-- `GET /v1/resumes/:id/download`
-
-## 登录状态与安全
-
-浏览器只在 `careermate.auth` 中保存当前用户资料和 JWT。Axios 请求拦截器会把 JWT 放进 `Authorization: Bearer ...`。Resume 的所有权由后端根据 JWT 判断，前端不会传入或自行决定 user ID。后端返回 `401` 时，前端会清除失效登录并回到登录页。
-
-申请追踪器由 Redux 的 `careerSlice` 管理，并通过监听中间件按用户 ID 同步到浏览器 `localStorage`；它仍是前端练习功能，并未写入后端数据库。
-
-## 验证
+Run the tests once, without watch mode:
 
 ```bash
 npm test -- --watchAll=false
+```
+
+Create a production build:
+
+```bash
 npm run build
 ```
 
-## 回退版本
+## How it is put together
 
-本次接入 Redux、Axios 和 Resume API 之前的完整版本保存在：
+### One API client
 
-- 提交：`e832907`
-- 分支：`backup/pre-redux-resume-e832907`
+All HTTP traffic goes through a single Axios instance in `src/services/apiClient.js`. It owns the base URL, a 15-second timeout, attaching the JWT as `Authorization: Bearer …`, and handling `401` responses. On a `401` it clears the stored session and calls the registered unauthorized handler, so no component has to detect or clean up an expired session itself.
 
-查看备份而不改动当前分支：
+### Injecting the unauthorized handler
 
-```bash
-git switch --detach backup/pre-redux-resume-e832907
-```
+`apiClient.js` exports `setUnauthorizedHandler`, and `src/index.js` registers the handler at startup. The handler dispatches `clearAuth()` and sends the browser to `/login` with `window.location.assign`.
 
-返回当前开发分支：
+The client does not import the store directly because that would create a circular import: `store.js` → `authSlice.js` → `authApi.js` → `apiClient.js`. With the handler injected, `apiClient.js` depends only on `authStorage.js`.
 
-```bash
-git switch test
-```
+### One error shape
+
+The response interceptor turns every failure into a plain `Error`. Its `message` is the server's `message` field when there is one, then Axios's own message, then a generic fallback. Callers never need to inspect `error.response`. The trade-off is that the HTTP status code is not kept on the error. The async thunks store `error.message` in their slice as a string.
+
+### Resume ownership and downloads
+
+The frontend never sends a user ID. `GET /v1/resumes` sends only `page` and `limit`, and the backend reads the owner from the JWT. To download a file, the page requests `GET /v1/resumes/:id/download`, which returns a short-lived presigned S3 URL. The browser then opens that URL.
+
+### Side effects stay out of reducers
+
+Every reducer is a pure function; none of them reads or writes `localStorage`.
+
+- **Application tracker:** persisted by Redux listener middleware in `src/store/store.js`. On `loginUser.fulfilled` it loads that user's saved applications. On `clearAuth` it resets the tracker. After an application is added, updated, or removed, it saves the list under `careermate.applications.<userId>`.
+- **Auth session:** saved in the `loginUser` thunk and cleared in `logoutUser` or by the API client on a `401`.
+
+### Store factory
+
+The store is created by `makeStore(preloadedState)`. Each call builds its own listener middleware and store, which is what lets every test start with its own clean store and chosen initial state. If no `career` state is passed in, the factory loads the tracker from `localStorage` for the current user. The app itself uses a single default instance.
+
+One caveat: the auth slice reads its initial `user` and `token` from `localStorage` once, when the module is first imported, not on each `makeStore` call.
+
+### Loading, error and empty states
+
+The resumes page handles each state separately:
+
+- **Loading:** a `role="status"` message, shown only when there are no rows yet.
+- **Failed:** the error message plus a "Try again" button.
+- **Empty:** a "No resumes yet" message.
+
+When you change pages, the current rows stay on screen. The list is marked `aria-busy` and the pagination controls are disabled until the new page arrives.
+
+### Pagination
+
+If there are 7 pages or fewer, every page number is shown. With more pages, the control shows the first page, the last page, and the pages on either side of the current one. Gaps are collapsed into an ellipsis that is hidden from screen readers. The current page button has `aria-current="page"`, and the resume list has `aria-busy` while a page is loading.
+
+## Tests
+
+`src/App.test.js` renders the whole app with a fresh `makeStore(...)` store in each test. It mocks `authApi` and `resumeApi` at the module level, so the tests exercise the Redux, routing, and UI layers without touching Axios or the network. It covers these paths:
+
+1. **Route guard:** a signed-out visit to `/home` redirects to the sign-in page.
+2. **Sign-in:** submitting the login form calls the API with the entered credentials, lands on the dashboard ("Welcome back, Alex"), and saves the JWT under `careermate.auth`.
+3. **Application tracker:** a signed-in user adds a job from `/jobs`, moves to Applications, changes the status to "Interview", and removes the application. The test checks `localStorage` after each step and ends on the empty tracker state.
+4. **Resume pagination:** with a page size of 5 and 10 resumes, page 1 loads with `aria-current="page"`. Clicking "Page 2" requests `{ page: 2, pageSize: 5 }`, and changing rows per page to 20 requests page 1 again.
+5. **TextInput:** an invalid field has `aria-invalid="true"`, shows its error message, and reports changes.
+
+`src/utils/validators.test.js` separately covers the login and registration form validators.
+
+These tests do not cover the API client itself (JWT injection, `401` handling, error normalisation), registration, resume downloads, the resumes page's loading, error and empty states, the pagination ellipsis, or returning to the originally requested page after sign-in.
+
+## Known limits
+
+- **Job listings:** fixture data hard-coded in `src/data/jobs.js`.
+- **Application tracker:** stored only in the browser's `localStorage`, keyed by user ID. It is never sent to the backend.
+- **JWT storage:** kept in `localStorage`. This accepts exposure to XSS in exchange for not handling CSRF or cross-origin cookie configuration. An httpOnly cookie makes the opposite trade-off.
+- **Expired sessions:** a `401` signs the user out immediately with a full page redirect to `/login`. There is no refresh-token flow.

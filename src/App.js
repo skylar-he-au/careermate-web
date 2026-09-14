@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import MainLayout from "./components/mainLayout/mainLayout";
-import ProtectedRoute from "./components/protectedRoute";
+import MainLayout from "./components/mainLayout/MainLayout";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Applications from "./pages/applications/applications";
 import Home from "./pages/home/home";
 import Jobs from "./pages/jobs/jobs";

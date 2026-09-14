@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { logoutUser } from "../../store/authSlice";
 import { resetResumes } from "../../store/resumeSlice";
-import "./mainLayout.css";
+import "./MainLayout.css";
 
 const menuItems = [
   { name: "Dashboard", icon: "⌂", path: "/home" },
