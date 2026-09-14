@@ -1,5 +1,7 @@
 # CareerMate
 
+![CareerMate dashboard](docs/screenshot-dashboard.png)
+
 CareerMate is a job application tracker built with React and Redux Toolkit. Authentication and resumes are served by a real Express/MongoDB API: [careermate-api](https://github.com/skylar-he-au/careermate-api).
 
 Users can register, sign in, browse jobs, track their applications, and page through and download the resumes they have uploaded.
